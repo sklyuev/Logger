@@ -52,14 +52,6 @@ def setup_log(logfile, destfile, maxBytes, backup, host, username, password, por
     Returns a custom rotating logger
     """
 
-    # logfile = config[logfile]
-    # destfile = config[destfile]
-    # maxBytes = config[maxBytes]
-    # backup = config[backup]
-    # host = config[host]
-    # username = config[username]
-    # password = config[password]
-    # port = config[port]
     print("1")
     logger = logging.getLogger("Rotating Log")
     logger.setLevel(logging.INFO)
