@@ -1,26 +1,37 @@
 import logging
+
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from ssh import SSHConnection
+
+logger = logging.getLogger(__name__)
 
 class MyFileHandler(RotatingFileHandler):
     """
     ...
     """
     def rotate(self, source, dest):
-        # print("Rotation is triggered")
+        # logger.debug("Call rotate soure:{}, dest:{}".format(source, dest))
+        source_file = source.split("/")[-1]
+        dest_file = dest.split("/")[-1]
+        print(source, source_file)
+        print(dest, dest_file)
+
         super().rotate(source, dest)
 
         if self.ssh_open:
-            put_result = self.ssh_connection.put(self.baseFilename,
-                                                    self.destfile)
-            print(self.baseFilename, self.destfile, put_result)
+
+            put_result = self.ssh_connection.put(dest, self.destfile+dest_file)
+            print(dest, "->", self.destfile+dest_file)
+            # logger.debug("SSH put source:{} -> dest:{}, res: {}".format(dest,
+            #                                                 self.destfile+dest,
+            #                                                 put_result))
         else:
             raise Exception("No SSH connection!")
-
-        if put_result:
-            # remove log file
-            pass
+        #
+        # if put_result:
+        #     # remove log file
+        #     pass
 
         # host = '192.168.56.101'
         # username = 'sklyuev'
@@ -40,51 +51,29 @@ class MyFileHandler(RotatingFileHandler):
         """
         Open SSH connection
         """
-        print(host, username, password, port)
+        logger.debug("Call setup_ssh")
         self.ssh_connection = SSHConnection(host, username, password, port)
-        print("Log SSH:", self.ssh_connection)
         self.destfile = destfile
         self.ssh_open = True
 
 
-def setup_log(logfile, destfile, maxBytes, backup, host, username, password, port):
+def setup_log(logfile, destfile, maxBytes, backup,
+                host, username, password, port):
     """
     Returns a custom rotating logger
     """
+    logger.debug("Call setup_log")
 
-    print("1")
-    logger = logging.getLogger("Rotating Log")
-    logger.setLevel(logging.INFO)
-
-    # add a rotating handler
+    # add handler
     handler = MyFileHandler(logfile, maxBytes=300, backupCount=5)
-    print("2")
+    logger.debug("Created MyFileHandler")
+
     # setup ssh
     handler.setup_ssh(host, username, password, port, destfile)
-    print("3")
+    logger.debug("Added SSH config")
+
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
     return logger
-
-
-if __name__ == "__main__":
-    config = {
-        'logfile': "/Users/sklyuev/Documents/github/Experiments/qwer.log",
-        'destfile': "/home/sklyuev/test2.txt",
-        'maxBytes': 300,
-        'backup': 5,
-        # SSH config
-        'host': "192.168.56.101",
-        'username': "sklyuev",
-        'password': "283314",
-        'port': 22
-    }
-
-    setup_log(**config)
-
-    # Write messages into the log
-    # for i in range(50):
-    #     logger.info("Test message")
-    #     time.sleep(1)

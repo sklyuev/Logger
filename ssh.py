@@ -1,5 +1,6 @@
 import paramiko
-import os
+import logging
+logger = logging.getLogger(__name__)
 
 class SSHConnection(object):
     """
@@ -10,6 +11,7 @@ class SSHConnection(object):
         """
         Initialize and setup connection
         """
+        logger.debug("Call SSHConnection constructor")
         self.sftp = None
         self.sftp_open = False
 
@@ -33,9 +35,11 @@ class SSHConnection(object):
         self._openSFTPConnection()
         res = False
         try:
+            logger.debug("Call GET")
             self.sftp.get(remote_path, local_path)
         except FileNotFoundError:
             res = False
+            logger.error("GET failed")
         else:
             res = True
         finally:
@@ -48,9 +52,11 @@ class SSHConnection(object):
         self._openSFTPConnection()
         res = False
         try:
-            print("ssh PUT")
+            logger.info("Call PUT")
+            print(local_path, "->", remote_path)
             self.sftp.put(local_path, remote_path)
         except FileNotFoundError:
+            logger.error("PUT failed")
             res = False
         else:
             res = True
